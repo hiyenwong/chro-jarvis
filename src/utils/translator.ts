@@ -1,9 +1,10 @@
-import { createAiProvider } from './aiApi';
+import { createAiProvider, AiProvider } from './aiApi';
 import { StorageManager } from './storage';
 import { TokenTracker } from './tokenTracker';
+import { errorHandler, ApiError } from './errorHandler';
 
 export class Translator {
-  private provider: any;
+  private provider?: AiProvider;
 
   async initialize(): Promise<void> {
     const config = await StorageManager.getConfig();
@@ -13,6 +14,10 @@ export class Translator {
   async translate(text: string, targetLang: string): Promise<string> {
     if (!this.provider) {
       await this.initialize();
+    }
+
+    if (!this.provider) {
+      throw new Error('无法初始化翻译服务');
     }
 
     try {
@@ -32,8 +37,12 @@ export class Translator {
 
       return response.content;
     } catch (error) {
-      console.error('翻译失败:', error);
-      return '翻译失败，请检查 API 配置';
+      if (error instanceof ApiError) {
+        const userMessage = errorHandler.getUserFriendlyMessage(error);
+        errorHandler.logError(error, { action: 'translate', textLength: text.length });
+        throw new Error(userMessage);
+      }
+      throw error;
     }
   }
 

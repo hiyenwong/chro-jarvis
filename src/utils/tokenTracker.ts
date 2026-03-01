@@ -1,31 +1,10 @@
-import { ApiUsage, AiProvider, RequestType, TokenUsageRecord, TokenSummary, TokenStatistics, TrendDataPoint, DEFAULT_PRICES } from '../types/tokenUsage';
+import { ApiUsage, AiProvider, RequestType, TokenUsageRecord, TokenSummary, TokenStatistics, TrendDataPoint } from '../types/tokenUsage';
+import { CommonUtils } from './commonUtils';
 
 /**
  * 存储键
  */
 const STORAGE_KEY_TOKEN_RECORDS = 'token-usage-records';
-
-/**
- * 计算 token 成本
- */
-function calculateCost(
-  usage: ApiUsage,
-  provider: AiProvider,
-  model: string
-): number {
-  const priceConfig = DEFAULT_PRICES.find(
-    (p) => p.provider === provider && p.model === model
-  );
-
-  if (!priceConfig) {
-    return 0;
-  }
-
-  const promptCost = (usage.prompt_tokens / 1000) * priceConfig.promptPrice;
-  const completionCost = (usage.completion_tokens / 1000) * priceConfig.completionPrice;
-
-  return promptCost + completionCost;
-}
 
 /**
  * Token 追踪管理器
@@ -48,13 +27,13 @@ export class TokenTracker {
     const records = await this.getAllRecords();
 
     const record: TokenUsageRecord = {
-      id: this.generateId(),
+      id: CommonUtils.generateId(),
       timestamp: Date.now(),
       provider,
       model,
       requestType,
       usage,
-      cost: calculateCost(usage, provider, model),
+      cost: CommonUtils.calculateCost(usage, provider, model),
       metadata
     };
 
@@ -178,7 +157,7 @@ export class TokenTracker {
 
     for (const record of records) {
       const date = new Date(record.timestamp);
-      const dateKey = this.formatDateKey(date);
+      const dateKey = CommonUtils.formatDateKey(date);
 
       if (!dailyMap.has(dateKey)) {
         dailyMap.set(dateKey, { tokens: 0, cost: 0 });
@@ -243,65 +222,30 @@ export class TokenTracker {
   }
 
   /**
-   * 生成唯一 ID
-   */
-  private static generateId(): string {
-    return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  }
-
-  /**
-   * 格式化日期为 YYYY-MM-DD
-   */
-  private static formatDateKey(date: Date): string {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
-
-  /**
    * 格式化成本显示
    */
   static formatCost(cost: number): string {
-    if (cost < 0.01) {
-      return `¥${(cost * 100).toFixed(2)} 分`;
-    }
-    return `¥${cost.toFixed(4)}`;
+    return CommonUtils.formatCost(cost);
   }
 
   /**
    * 格式化 token 数量
    */
   static formatTokenCount(count: number): string {
-    if (count >= 1000000) {
-      return `${(count / 1000000).toFixed(2)}M`;
-    }
-    if (count >= 1000) {
-      return `${(count / 1000).toFixed(2)}K`;
-    }
-    return count.toString();
+    return CommonUtils.formatTokenCount(count);
   }
 
   /**
    * 获取 Provider 显示名称
    */
   static getProviderDisplayName(provider: AiProvider): string {
-    const names: Record<AiProvider, string> = {
-      deepseek: 'DeepSeek',
-      zhipu: '智谱 AI',
-      volcano: '火山引擎'
-    };
-    return names[provider] || provider;
+    return CommonUtils.getProviderDisplayName(provider);
   }
 
   /**
    * 获取请求类型显示名称
    */
   static getRequestTypeName(type: RequestType): string {
-    const names: Record<RequestType, string> = {
-      chat: '问答',
-      translate: '翻译'
-    };
-    return names[type] || type;
+    return CommonUtils.getRequestTypeName(type);
   }
 }

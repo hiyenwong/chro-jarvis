@@ -1,11 +1,9 @@
+import { PluginMessage } from './index';
+
 declare global {
-  namespace chrome {
-    namespace runtime {
-      interface MessageEvent {
-        data: any;
-        sender: chrome.runtime.MessageSender;
-        sendResponse: (response: any) => void;
-      }
-    }
+  interface ChromeRuntimeMessageEvent {
+    data: PluginMessage;
+    sender: chrome.runtime.MessageSender;
+    sendResponse: (response: unknown) => void;
   }
 }

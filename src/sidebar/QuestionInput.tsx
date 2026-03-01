@@ -35,16 +35,34 @@ function QuestionInput({ onSendMessage, onLoading }: QuestionInputProps) {
       const config = await StorageManager.getConfig();
       const provider = createAiProvider(config);
 
-      // 获取页面上下文
-      const pageContent = document.body.innerText;
-      const context = pageContent.slice(0, 1000);
+      // 获取页面上下文（通过后台脚本）
+      let context = '';
+      try {
+        const response = await chrome.runtime.sendMessage({ action: 'getPageContext' });
+        if (response?.success && response.context) {
+          context = response.context;
+        } else {
+          console.warn('无法获取页面上下文，将使用默认上下文');
+          context = '无法获取页面详细内容，请直接提问关于页面的问题';
+        }
+      } catch (error) {
+        console.warn('获取页面上下文失败:', error);
+        context = '无法获取页面详细内容，请直接提问关于页面的问题';
+      }
 
-      // 调用 AI 生成答案
-      const apiResponse = await provider.generateAnswer(question, context);
+      // 判断是否是页面分析请求
+      let apiResponse;
+      if (question.toLowerCase().includes('分析页面') || question.toLowerCase().includes('页面分析')) {
+        // 调用页面分析功能
+        apiResponse = await provider.generateAnswer('请分析这个页面的内容和结构', context);
+      } else {
+        // 调用 AI 生成答案
+        apiResponse = await provider.generateAnswer(question, context);
+      }
 
       // 记录 token 使用情况
       await TokenTracker.recordUsage(
-        provider.getProviderName() as 'deepseek' | 'zhipu' | 'volcano',
+        provider.getProviderName(),
         provider.getModelName(),
         'chat',
         apiResponse.usage,
@@ -90,7 +108,7 @@ function QuestionInput({ onSendMessage, onLoading }: QuestionInputProps) {
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyPress={handleKeyPress}
-          placeholder="输入你的问题..."
+          placeholder="输入你的问题，或尝试'分析页面'"
           className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
         <button

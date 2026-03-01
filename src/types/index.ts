@@ -145,10 +145,10 @@ export interface ContextInfo {
 /**
  * 通用消息结构
  */
-export interface PluginMessage {
+export interface PluginMessage<T = unknown> {
   type: MessageType;
   id?: string;
-  data?: any;
+  data?: T;
   error?: string;
 }
 

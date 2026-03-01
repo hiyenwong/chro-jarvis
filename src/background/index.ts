@@ -43,6 +43,31 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: true });
       break;
 
+    case 'getPageContext':
+      // 获取页面上下文
+      if (sender.tab?.id) {
+        chrome.tabs.sendMessage(sender.tab.id, { action: 'getPageContent' }, (response) => {
+          if (response?.success) {
+            sendResponse({
+              success: true,
+              context: response.content.slice(0, 1000)  // 限制上下文长度
+            });
+          } else {
+            sendResponse({
+              success: false,
+              error: '无法获取页面内容'
+            });
+          }
+        });
+        return true; // 保持消息通道打开
+      } else {
+        sendResponse({
+          success: false,
+          error: '无法确定当前标签页'
+        });
+      }
+      break;
+
     default:
       console.log('未知消息类型:', request.action);
   }

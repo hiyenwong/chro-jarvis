@@ -26,6 +26,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       });
       return true;
 
+    case 'getPageContent':
+      // 获取页面内容
+      try {
+        const pageContent = document.body.innerText;
+        sendResponse({
+          success: true,
+          content: pageContent
+        });
+      } catch (error) {
+        console.error('获取页面内容失败:', error);
+        sendResponse({
+          success: false,
+          error: error instanceof Error ? error.message : '未知错误'
+        });
+      }
+      return true;
+
     default:
       console.log('未知消息类型:', request.action);
   }

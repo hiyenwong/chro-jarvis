@@ -1,14 +1,23 @@
 import { Config, ChatHistory } from '../types';
+import { secureStorage } from './secureStorage';
 
 export class StorageManager {
-  // 获取配置
+  // 获取配置（包含安全存储的 API Key）
   static async getConfig(): Promise<Config> {
     const result = await chrome.storage.sync.get('config');
-    return result.config as Config || {
+    const baseConfig = result.config as Config || {
       aiProvider: 'deepseek',
       apiKey: '',
       targetLanguage: 'zh-CN'
     };
+
+    // 从安全存储获取 API Key
+    const apiKey = await secureStorage.getApiKey(baseConfig.aiProvider);
+    if (apiKey) {
+      baseConfig.apiKey = apiKey;
+    }
+
+    return baseConfig;
   }
 
   // 保存配置

@@ -8,14 +8,24 @@ function Sidebar() {
   const [chatHistory, setChatHistory] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
   const [tabId, setTabId] = useState<number | null>(null);
+  const [pageInfo, setPageInfo] = useState<{ url: string; title: string }>({
+    url: '',
+    title: ''
+  });
 
   useEffect(() => {
-    // 获取当前标签页 ID
+    // 获取当前标签页信息
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       if (tabs[0]) {
-        setTabId(tabs[0].id!);
+        const { id, url, title } = tabs[0];
+        setTabId(id!);
+        setPageInfo({
+          url: url || '',
+          title: title || ''
+        });
+
         // 加载聊天历史
-        StorageManager.getChatHistory(tabs[0].id!).then((history) => {
+        StorageManager.getChatHistory(id!).then((history) => {
           setChatHistory(history.history);
         });
       }
@@ -29,8 +39,8 @@ function Sidebar() {
     // 保存聊天历史到存储
     if (tabId) {
       await StorageManager.saveChatHistory(tabId, {
-        url: '',
-        title: '',
+        url: pageInfo.url,
+        title: pageInfo.title,
         history: newHistory
       });
     }
@@ -45,6 +55,11 @@ function Sidebar() {
       <div className="p-4 border-b">
         <h1 className="text-xl font-bold">Chro-Jarvis</h1>
         <p className="text-sm text-gray-500 mt-1">智能页面问答助手</p>
+        {pageInfo.title && (
+          <p className="text-xs text-gray-400 mt-2 truncate">
+            当前页面: {pageInfo.title}
+          </p>
+        )}
       </div>
 
       <ChatHistory history={chatHistory} />

@@ -5,7 +5,7 @@
 /**
  * AI 提供商
  */
-export type AiProvider = 'deepseek' | 'zhipu' | 'volcano';
+export type AiProvider = 'deepseek' | 'zhipu' | 'volcano' | 'openai' | 'claude';
 
 /**
  * 请求类型
@@ -118,5 +118,19 @@ export const DEFAULT_PRICES: TokenPrice[] = [
     model: 'ep-20250526153619-ux4h1',
     promptPrice: 0.004,    // 4 元/1M tokens
     completionPrice: 0.009, // 9 元/1M tokens
+  },
+  // OpenAI
+  {
+    provider: 'openai',
+    model: 'gpt-3.5-turbo',
+    promptPrice: 0.0015,   // 1.5 元/1M tokens
+    completionPrice: 0.002, // 2 元/1M tokens
+  },
+  // Claude
+  {
+    provider: 'claude',
+    model: 'claude-3-sonnet-20250219',
+    promptPrice: 0.0011,   // 1.1 元/1M tokens
+    completionPrice: 0.0032, // 3.2 元/1M tokens
   },
 ];

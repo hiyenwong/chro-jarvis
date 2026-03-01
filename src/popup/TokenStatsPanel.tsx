@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TokenTracker } from '../utils/tokenTracker';
 import { TokenSummary, TimeRange, TokenStatistics } from '../types/tokenUsage';
+import { TokenStatsSkeleton, TokenStatsEmptyState } from '../components/EmptyState';
 
 function TokenStatsPanel() {
   const [summary, setSummary] = useState<TokenSummary | null>(null);
@@ -57,19 +58,11 @@ function TokenStatsPanel() {
   };
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">加载中...</div>
-      </div>
-    );
+    return <TokenStatsSkeleton />;
   }
 
-  if (!summary) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-gray-500">暂无数据</div>
-      </div>
-    );
+  if (!summary || summary.totalTokens === 0) {
+    return <TokenStatsEmptyState />;
   }
 
   return (
